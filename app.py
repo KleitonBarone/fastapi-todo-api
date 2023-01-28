@@ -1,12 +1,30 @@
-from typing import Union
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
 
-app = FastAPI()
+from todoModel import Base
+from db import SessionLocal, engine
+from todoService import get_todos
 
-@app.get("/")
-def home():
-	return {"Hello": "World"}
+Base.metadata.create_all(bind=engine)
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-	return {"item_id": item_id, "q": q}
+app = FastAPI(
+	title="Todo API",
+	description="CRUD operations of TODOs using this API",
+	version="1.0.0",
+)
+
+def get_db():
+	db = SessionLocal()
+	try:
+		yield db
+	finally:
+		db.close()
+
+@app.get("/health")
+def health():
+	return {"status": "UP"}
+
+@app.get("/todos")
+def read_item(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+	todos = get_todos(db=db, skip=skip, limit=limit)
+	return todos
