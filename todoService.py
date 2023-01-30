@@ -17,3 +17,15 @@ def add_todo_to_db(db: Session, todo: todoDTO.TodoDTO):
 	db.commit()
 	db.refresh(new_todo)
 	return todoModel.Todo(**todo.dict())
+
+def update_todo(db: Session, todo_id: int, todo_data: todoDTO.TodoDTO):
+	db.query(todoModel.Todo).filter(todoModel.Todo.id == todo_id).update(vars(todo_data))
+	db.commit()
+	return db.query(todoModel.Todo).filter(todoModel.Todo.id == todo_id).first()
+
+def delete_todo_by_id(db: Session, todo_id: int):
+	try:
+		db.query(todoModel.Todo).filter(todoModel.Todo.id == todo_id).delete()
+		db.commit()
+	except Exception as e:
+		raise Exception(e)
